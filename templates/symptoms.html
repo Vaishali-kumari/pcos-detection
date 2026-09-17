@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Symptom Tracker - Results</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .user-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .risk-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        .risk-low {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .risk-moderate {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .risk-high {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .nav-buttons {
+            margin-bottom: 20px;
+            text-align: right;
+        }
+        .chart-container {
+            position: relative;
+            margin: 20px 0;
+            height: 300px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4361ee;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #6c757d;
+        }
+        .results-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav-buttons">
+            <a href="/test" class="btn btn-primary">New Assessment</a>
+            <a href="/login" class="btn btn-outline-danger">Logout</a>
+        </div>
+        
+        <div class="user-header">
+            <h2>PCOS Assessment Results for <span id="usernameDisplay"></span></h2>
+            <p class="text-muted">Your PCOS risk assessment statistics</p>
+        </div>
+        
+        <div class="results-section">
+            <div id="statsContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentUser = localStorage.getItem('currentUser');
+            const history = JSON.parse(localStorage.getItem('loginHistory') || '[]');
+            
+            // Display current username
+            document.getElementById('usernameDisplay').textContent = currentUser || 'Guest';
+            
+            // Filter and get user's assessment history
+            const assessments = history.filter(entry => 
+                entry.username === currentUser && entry.type === 'assessment'
+            );
+            
+            const statsContainer = document.getElementById('statsContainer');
+            
+            if (assessments.length === 0) {
+                statsContainer.innerHTML = '<div class="alert alert-info">No assessment results found. Complete an assessment to see your results.</div>';
+            } else {
+                // Get the latest assessment
+                const latestAssessment = assessments[assessments.length - 1];
+                
+                // Calculate statistics
+                const averageRisk = assessments.reduce((sum, a) => sum + parseFloat(a.riskPercentage), 0) / assessments.length;
+                const riskLevels = assessments.map(a => a.riskLevel);
+                const riskCounts = {
+                    low: riskLevels.filter(l => l === 'low').length,
+                    moderate: riskLevels.filter(l => l === 'moderate').length,
+                    high: riskLevels.filter(l => l === 'high').length
+                };
+                
+                // Display statistics
+                statsContainer.innerHTML = `
+                    <div class="text-center mb-4">
+                        <h3>Your Current Risk Assessment</h3>
+                        <div class="risk-badge risk-${latestAssessment.riskLevel}" style="font-size: 1.2rem; padding: 8px 15px; display: inline-block;">
+                            ${latestAssessment.riskLevel.toUpperCase()} RISK (${latestAssessment.riskPercentage}%)
+                        </div>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value">${assessments.length}</div>
+                            <div class="stat-label">Total Assessments</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${averageRisk.toFixed(1)}%</div>
+                            <div class="stat-label">Average Risk</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${latestAssessment.riskPercentage}%</div>
+                            <div class="stat-label">Current Risk</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${getTrend(assessments)}</div>
+                            <div class="stat-label">Risk Trend</div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <canvas id="riskDistributionChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="riskTrendChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="riskFactorsChart"></canvas>
+                    </div>
+                `;
+                
+                // Render charts
+                renderRiskDistributionChart(riskCounts);
+                renderRiskTrendChart(assessments);
+                renderRiskFactorsChart(latestAssessment);
+            }
+        });
+        
+        function getTrend(assessments) {
+            if (assessments.length < 2) return 'N/A';
+            const first = parseFloat(assessments[0].riskPercentage);
+            const last = parseFloat(assessments[assessments.length - 1].riskPercentage);
+            
+            if (last > first + 5) return 'Increasing';
+            if (last < first - 5) return 'Decreasing';
+            return 'Stable';
+        }
+        
+        function renderRiskDistributionChart(riskCounts) {
+            const ctx = document.getElementById('riskDistributionChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Low Risk', 'Moderate Risk', 'High Risk'],
+                    datasets: [{
+                        data: [riskCounts.low, riskCounts.moderate, riskCounts.high],
+                        backgroundColor: [
+                            '#d4edda',
+                            '#fff3cd',
+                            '#f8d7da'
+                        ],
+                        borderColor: [
+                            '#c3e6cb',
+                            '#ffeeba',
+                            '#f5c6cb'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Your Risk Level Distribution',
+                            font: {
+                                size: 16
+                            }
+                        },
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+        
+        function renderRiskTrendChart(assessments) {
+            const ctx = document.getElementById('riskTrendChart').getContext('2d');
+            const dates = assessments.map(a => new Date(a.timestamp).toLocaleDateString());
+            const risks = assessments.map(a => parseFloat(a.riskPercentage));
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Risk Percentage',
+                        data: risks,
+                        fill: false,
+                        backgroundColor: '#4361ee',
+                        borderColor: '#4361ee',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Your Risk Trend Over Time',
+                            font: {
+                                size: 16
+                            }
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Risk Percentage'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Assessment Date'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function renderRiskFactorsChart(assessment) {
+            const ctx = document.getElementById('riskFactorsChart').getContext('2d');
+            
+            // Prepare data for radar chart
+            const factors = {
+                'Age': normalizeValue(assessment.formData.age, 15, 45),
+                'BMI': normalizeValue(assessment.formData.bmi, 18, 40),
+                'Cycle Regularity': assessment.formData.menstrual === 'Yes' ? 30 : 80,
+                'Family History': assessment.formData.familyHistory === 'Yes' ? 70 : 20,
+                'Symptoms': calculateSymptomsScore(assessment.formData)
+            };
+            
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: Object.keys(factors),
+                    datasets: [{
+                        label: 'Risk Factors',
+                        data: Object.values(factors),
+                        backgroundColor: 'rgba(67, 97, 238, 0.2)',
+                        borderColor: 'rgba(67, 97, 238, 1)',
+                        pointBackgroundColor: 'rgba(67, 97, 238, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(67, 97, 238, 1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: {
+                                display: true
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 100,
+                            ticks: {
+                                display: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Your Risk Factor Analysis',
+                            font: {
+                                size: 16
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.dataset.label || '';
+                                    const value = context.raw;
+                                    let explanation = '';
+                                    
+                                    switch(context.label) {
+                                        case 'Age':
+                                            explanation = `Age: ${assessment.formData.age} years`;
+                                            break;
+                                        case 'BMI':
+                                            explanation = `BMI: ${assessment.formData.bmi}`;
+                                            break;
+                                        case 'Cycle Regularity':
+                                            explanation = `Cycle: ${assessment.formData.menstrual === 'Yes' ? 'Regular' : 'Irregular'}`;
+                                            break;
+                                        case 'Family History':
+                                            explanation = `Family History: ${assessment.formData.familyHistory}`;
+                                            break;
+                                        case 'Symptoms':
+                                            explanation = `Symptoms: ${getSymptomsCount(assessment.formData)} reported`;
+                                            break;
+                                    }
+                                    
+                                    return [label, explanation, `Contribution: ${Math.round(value)}%`];
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function normalizeValue(value, min, max) {
+            // Normalize value to 0-100 scale based on min/max
+            const normalized = ((value - min) / (max - min)) * 100;
+            return Math.min(100, Math.max(0, normalized));
+        }
+        
+        function calculateSymptomsScore(formData) {
+            // Count how many symptom-related questions were answered "Yes"
+            let count = 0;
+            const symptomFields = ['hairGrowth', 'weightGain', 'hairLoss', 'acne', 'skinDarkening'];
+            
+            symptomFields.forEach(field => {
+                if (formData[field] === 'Yes') count++;
+            });
+            
+            // Convert to a score out of 100
+            return (count / symptomFields.length) * 100;
+        }
+        
+        function getSymptomsCount(formData) {
+            let count = 0;
+            const symptomFields = ['hairGrowth', 'weightGain', 'hairLoss', 'acne', 'skinDarkening'];
+            
+            symptomFields.forEach(field => {
+                if (formData[field] === 'Yes') count++;
+            });
+            
+            return count;
+        }
+    </script>
+</body>
+</html>

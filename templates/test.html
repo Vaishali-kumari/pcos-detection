@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PCOS Risk Assessment</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background: #f0f4f8; font-family: 'Segoe UI', sans-serif; }
+
+        .card { border: none; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.10); }
+        .card-header {
+            background: linear-gradient(135deg, #4a6fa5, #6b8cae);
+            border-radius: 16px 16px 0 0 !important;
+            padding: 1.4rem 2rem;
+        }
+        .form-control, .form-select {
+            border-radius: 8px; padding: 0.7rem 1rem; border: 1.5px solid #d0d7e3;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #4a6fa5; box-shadow: 0 0 0 3px rgba(74,111,165,0.15);
+        }
+        .btn-assess {
+            background: linear-gradient(135deg, #ff7e5f, #feb47b);
+            border: none; border-radius: 10px; color: white;
+            font-size: 1.1rem; font-weight: 600; padding: 0.9rem;
+            transition: transform 0.2s;
+        }
+        .btn-assess:hover { transform: translateY(-2px); color: white; }
+
+        /* ── Result Box ── */
+        .result-section { margin-top: 2rem; }
+
+        .result-low {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            border-left: 6px solid #28a745;
+            border-radius: 14px; padding: 2rem;
+        }
+        .result-moderate {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            border-left: 6px solid #ffc107;
+            border-radius: 14px; padding: 2rem;
+        }
+        .result-high {
+            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+            border-left: 6px solid #dc3545;
+            border-radius: 14px; padding: 2rem;
+        }
+
+        .risk-title-low      { color: #155724; font-size: 2rem; font-weight: 800; }
+        .risk-title-moderate { color: #856404; font-size: 2rem; font-weight: 800; }
+        .risk-title-high     { color: #721c24; font-size: 2rem; font-weight: 800; }
+
+        .risk-icon { font-size: 3rem; margin-right: 1rem; }
+        .rec-list li { padding: 0.3rem 0; }
+
+        .topbar { background: white; padding: 0.8rem 1.5rem; border-radius: 12px;
+                  box-shadow: 0 2px 8px rgba(0,0,0,0.07); margin-bottom: 1.5rem;
+                  display: flex; justify-content: space-between; align-items: center; }
+    </style>
+</head>
+<body>
+<div class="container py-4">
+
+    <!-- Top bar -->
+    <div class="topbar">
+        <div>
+            <i class="fas fa-heartbeat text-danger me-2"></i>
+            <strong>PCOS Care</strong>
+            {% if username %}<span class="text-muted ms-2">| {{ username }}</span>{% endif %}
+        </div>
+        <div>
+            <a href="/" class="btn btn-outline-secondary btn-sm me-2"><i class="fas fa-home me-1"></i>Home</a>
+            <a href="/user-history" class="btn btn-outline-primary btn-sm me-2"><i class="fas fa-history me-1"></i>History</a>
+            <a href="/logout" class="btn btn-outline-danger btn-sm"><i class="fas fa-sign-out-alt me-1"></i>Logout</a>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="row justify-content-center">
+      <div class="col-lg-9">
+
+        <!-- ── RESULT (shown after submit) ── -->
+        {% if result %}
+        <div class="result-section mb-4">
+          <div class="result-{{ result.risk_level }}">
+            <div class="d-flex align-items-center mb-3">
+              {% if result.risk_level == 'low' %}
+                <i class="fas fa-check-circle risk-icon text-success"></i>
+              {% elif result.risk_level == 'moderate' %}
+                <i class="fas fa-exclamation-circle risk-icon text-warning"></i>
+              {% else %}
+                <i class="fas fa-times-circle risk-icon text-danger"></i>
+              {% endif %}
+              <div>
+                <div class="risk-title-{{ result.risk_level }}">
+                  {{ result.risk_level | upper }} RISK &nbsp;—&nbsp; {{ result.risk_percentage }}%
+                </div>
+                <div class="text-muted small">PCOS Risk Assessment Result</div>
+              </div>
+            </div>
+
+            <p class="fs-6 mb-3">{{ result.message }}</p>
+
+            <hr style="border-color: rgba(0,0,0,0.15)">
+
+            <h6 class="fw-bold mb-2"><i class="fas fa-list-check me-2"></i>Recommendations:</h6>
+            <ul class="rec-list ps-3">
+              {% for rec in result.recommendations %}
+                <li>{{ rec }}</li>
+              {% endfor %}
+            </ul>
+
+            <div class="mt-3 d-flex gap-2 flex-wrap">
+              <a href="/test" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-redo me-1"></i>Take Again
+              </a>
+              <a href="/recommend" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-notes-medical me-1"></i>Detailed Recommendations
+              </a>
+              <a href="/user-history" class="btn btn-outline-dark btn-sm">
+                <i class="fas fa-history me-1"></i>View History
+              </a>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- ── FORM ── -->
+        <div class="card">
+          <div class="card-header">
+            <h4 class="text-white mb-0 text-center">
+              <i class="fas fa-stethoscope me-2"></i>PCOS Risk Assessment
+            </h4>
+          </div>
+          <div class="card-body p-4">
+            <p class="text-muted mb-4">Fill in your details below. All fields are required.</p>
+
+            <form method="POST" action="/predict">
+
+              <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">Age (years)</label>
+                  <input type="number" class="form-control" name="age" min="10" max="60" placeholder="e.g. 25" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">BMI Category</label>
+                  <select class="form-select" name="bmi" required>
+                    <option value="">-- Select --</option>
+                    <option value="Underweight">Underweight (&lt;18.5)</option>
+                    <option value="Normal">Normal (18.5–24.9)</option>
+                    <option value="Overweight">Overweight (25–29.9)</option>
+                    <option value="Obese">Obese (≥30)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">Hirsutism (excess hair growth)?</label>
+                  <select class="form-select" name="hirsutism" required>
+                    <option value="">-- Select --</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">Persistent Acne?</label>
+                  <select class="form-select" name="acne" required>
+                    <option value="">-- Select --</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">Menstrual Cycle</label>
+                  <select class="form-select" name="menstrual" required>
+                    <option value="">-- Select --</option>
+                    <option value="Yes">Regular (21–35 days)</option>
+                    <option value="No">Irregular / Absent</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">Family History of PCOS?</label>
+                  <select class="form-select" name="familyHistory" required>
+                    <option value="">-- Select --</option>
+                    <option value="Yes">Yes (mother/sister)</option>
+                    <option value="No">No</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">Waist-Hip Ratio</label>
+                  <input type="number" step="0.01" class="form-control" name="waistHipRatio"
+                         min="0.5" max="1.5" placeholder="e.g. 0.80" required>
+                  <div class="form-text">Normal for women: 0.7–0.85</div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">AMH Level (ng/mL)</label>
+                  <input type="number" step="0.01" class="form-control" name="amh"
+                         min="0" max="20" placeholder="e.g. 2.5" required>
+                  <div class="form-text">Normal: 1.0–3.5 ng/mL</div>
+                </div>
+              </div>
+
+              <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">Fasting Glucose (mg/dL)</label>
+                  <input type="number" class="form-control" name="fastingGlucose"
+                         min="50" max="300" placeholder="e.g. 90" required>
+                  <div class="form-text">Normal: 70–100 mg/dL</div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">Fasting Insulin (μIU/mL)</label>
+                  <input type="number" class="form-control" name="fastingInsulin"
+                         min="0" max="100" placeholder="e.g. 10" required>
+                  <div class="form-text">Normal: 2–19 μIU/mL</div>
+                </div>
+              </div>
+
+              <div class="d-grid">
+                <button type="submit" class="btn-assess">
+                  <i class="fas fa-search me-2"></i>Check My PCOS Risk
+                </button>
+              </div>
+
+            </form>
+          </div>
+          <div class="card-footer bg-light text-center text-muted small py-2">
+            <i class="fas fa-info-circle me-1"></i>
+            This is a preliminary assessment only. Always consult your doctor for diagnosis.
+          </div>
+        </div>
+
+      </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

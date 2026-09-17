@@ -1,0 +1,23 @@
+# Database
+database.db
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+env/
+.env
+
+# VS Code
+.vscode/
+
+# Compiled model files (large - optional to include)
+# *.pkl
+
+# OS files
+.DS_Store
+Thumbs.db

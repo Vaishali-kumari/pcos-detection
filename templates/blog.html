@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PCOS Management Hub - Community Wisdom</title>
+    <style>
+        :root {
+            --primary-color: #4a6fa5; /* Deep blue */
+            --primary-light: rgba(74, 111, 165, 0.1);
+            --secondary-color: #6b8cae; /* Soft blue */
+            --accent-color: #ff7e5f; /* Coral/peach */
+            --accent-light: rgba(255, 126, 95, 0.1);
+            --light-bg: #f8f9fa;
+            --dark-text: #2c3e50;
+            --card-bg: #ffffff;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: var(--dark-text);
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--light-bg);
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 600;
+        }
+        
+        h2 {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 8px;
+            font-size: 1.8em;
+            font-weight: 500;
+        }
+        
+        h3 {
+            color: var(--primary-color);
+            font-size: 1.4em;
+            font-weight: 500;
+        }
+        
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .resource-card {
+            flex: 1 1 300px;
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            border-top: 4px solid var(--accent-color);
+        }
+        
+        .resource-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+        
+        .resource-card h3 {
+            color: var(--primary-color);
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        
+        .resource-card ul {
+            padding-left: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .resource-card li {
+            margin-bottom: 8px;
+        }
+        
+        .resource-card a {
+            color: var(--secondary-color);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .resource-card a:hover {
+            color: var(--primary-color);
+            text-decoration: underline;
+        }
+        
+        .community-section {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+        
+        .advice-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+            background: var(--primary-light);
+            padding: 20px;
+            border-radius: 8px;
+        }
+        
+        textarea, input {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 1em;
+            transition: border 0.3s;
+        }
+        
+        textarea:focus, input:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(107, 140, 174, 0.2);
+        }
+        
+        textarea {
+            height: 120px;
+            resize: vertical;
+        }
+        
+        button {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            transition: all 0.3s;
+            align-self: flex-start;
+        }
+        
+        button:hover {
+            background-color: #ff6a45;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .user-advice {
+            background: var(--primary-light);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--secondary-color);
+        }
+        
+        .user-advice h4 {
+            margin-top: 0;
+            color: var(--primary-color);
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+        
+        .expert-response {
+            background: var(--accent-light);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid var(--accent-color);
+        }
+        
+        .expert-response strong {
+            color: var(--primary-color);
+        }
+        
+        hr {
+            border: 0;
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--secondary-color), transparent);
+            margin: 30px 0;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            header {
+                padding: 20px 15px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>PCOS Management Hub</h1>
+        <p>Share your remedies, learn from experts, and find support</p>
+    </header>
+    
+    <div class="container">
+        <div class="resource-card">
+            <h3>Diet & Nutrition</h3>
+            <p>Explore articles on PCOS-friendly diets, recipes, and nutritional supplements.</p>
+            <ul>
+                <li><a href="#">Anti-inflammatory foods for PCOS</a></li>
+                <li><a href="#">Managing insulin resistance through diet</a></li>
+                <li><a href="#">Vegetarian meal plans for PCOS</a></li>
+            </ul>
+            <button>View All Articles</button>
+        </div>
+        
+        <div class="resource-card">
+            <h3>Exercise & Lifestyle</h3>
+            <p>Discover workout routines and lifestyle changes that help manage PCOS symptoms.</p>
+            <ul>
+                <li><a href="#">Yoga for hormonal balance</a></li>
+                <li><a href="#">Strength training benefits for PCOS</a></li>
+                <li><a href="#">Stress management techniques</a></li>
+            </ul>
+            <button>View All Resources</button>
+        </div>
+        
+        <div class="resource-card">
+            <h3>Medical Treatments</h3>
+            <p>Learn about medications, supplements, and other medical approaches to PCOS.</p>
+            <ul>
+                <li><a href="#">Metformin and PCOS</a></li>
+                <li><a href="#">Birth control options</a></li>
+                <li><a href="#">Fertility treatments</a></li>
+            </ul>
+            <button>Learn More</button>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="resource-card">
+            <h3>Expert Consultations</h3>
+            <p>Schedule video consultations with PCOS specialists including endocrinologists, nutritionists, and fertility experts.</p>
+            <button>View Available Experts</button>
+        </div>
+        
+        <div class="resource-card">
+            <h3>Upcoming Webinars</h3>
+            <p>Join our live webinars or watch recorded sessions with PCOS experts.</p>
+            <ul>
+                <li><strong>May 25:</strong> Managing PCOS Through Nutrition</li>
+                <li><strong>June 8:</strong> Fertility Awareness with PCOS</li>
+                <li><strong>June 15:</strong> Exercise Strategies for PCOS</li>
+            </ul>
+            <button>Register Now</button>
+        </div>
+    </div>
+    
+    <div class="community-section">
+        <h2>Community Wisdom</h2>
+        <p>Share your personal remedies and advice for managing PCOS. Our experts may respond with medical insights.</p>
+        
+        <div class="advice-form">
+            <h3>Share Your Advice</h3>
+            <input type="text" id="user-name" placeholder="Your Name (optional)">
+            <textarea id="user-advice" rows="5" placeholder="What remedy or management strategy has worked for you?"></textarea>
+            <button id="submit-advice">Submit Advice</button>
+        </div>
+        
+        <h3>Community Contributions</h3>
+        
+        <div id="advice-container">
+            <div class="user-advice">
+                <h4>Sarah M.</h4>
+                <p>"I've found that spearmint tea twice daily has significantly reduced my facial hair growth. I drink one cup in the morning and one at night."</p>
+                
+                <div class="expert-response">
+                    <p><strong>Dr. Patel, Endocrinologist:</strong> "Research does support that spearmint tea may have anti-androgen effects. While it's not a substitute for medical treatment, it can be a helpful complementary approach for hirsutism in PCOS."</p>
+                </div>
+            </div>
+            
+            <div class="user-advice">
+                <h4>Emma L.</h4>
+                <p>"Intermittent fasting (16:8) combined with low-carb eating has helped me lose 20 pounds and regulate my cycles for the first time in years."</p>
+            </div>
+            
+            <div class="user-advice">
+                <h4>Ananya K.</h4>
+                <p>"I do 30 minutes of yoga every morning focusing on poses that massage the abdominal area. This along with reducing sugar has helped with my bloating and irregular periods."</p>
+                
+                <div class="expert-response">
+                    <p><strong>Dr. Chen, Integrative Medicine:</strong> "Yoga can be excellent for PCOS as it combines physical activity with stress reduction. Certain poses may improve blood flow to reproductive organs. Just ensure you're also addressing nutrition and medical needs."</p>
+                </div>
+            </div>
+            
+            <div class="user-advice">
+                <h4>Jasmine T.</h4>
+                <p>"Taking inositol supplements and walking after meals has dramatically improved my insulin resistance numbers within 3 months."</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="community-section">
+        <h2>Expert Insights</h2>
+        <p>Our medical team shares professional perspectives on PCOS management.</p>
+        
+        <div class="user-advice">
+            <h4>Dr. Rodriguez, Endocrinologist</h4>
+            <p>"While lifestyle changes are foundational for PCOS management, we now have good evidence that a combination of diet, exercise, and targeted supplements (like inositol) can be as effective as medication for many women with insulin-resistant PCOS."</p>
+        </div>
+        
+        <div class="user-advice">
+            <h4>Nutritionist Amy Wong</h4>
+            <p>"Many women with PCOS benefit from focusing on protein and fiber at each meal to balance blood sugar. Try to include a vegetable, protein source, and healthy fat in every meal."</p>
+        </div>
+    </div>
+    
+    <footer>
+        <p>Disclaimer: The information on this site is not intended or implied to be a substitute for professional medical advice, diagnosis or treatment.</p>
+        <p>© 2023 PCOS Management Hub | Contact Us | Privacy Policy</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const submitAdviceBtn = document.getElementById('submit-advice');
+            const adviceContainer = document.getElementById('advice-container');
+            
+            submitAdviceBtn.addEventListener('click', function() {
+                const name = document.getElementById('user-name').value || 'Anonymous';
+                const adviceText = document.getElementById('user-advice').value;
+                
+                if (!adviceText.trim()) {
+                    alert('Please share your advice before submitting.');
+                    return;
+                }
+                
+                const adviceDiv = document.createElement('div');
+                adviceDiv.className = 'user-advice';
+                adviceDiv.innerHTML = `
+                    <h4>${name}</h4>
+                    <p>"${adviceText}"</p>
+                `;
+                
+                // Add to the top of the container
+                adviceContainer.insertBefore(adviceDiv, adviceContainer.firstChild);
+                
+                // Clear the form
+                document.getElementById('user-name').value = '';
+                document.getElementById('user-advice').value = '';
+                
+                // Show confirmation
+                alert('Thank you for sharing your advice!');
+            });
+        });
+    </script>
+</body>
+</html>

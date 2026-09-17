@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PCOS Recommendations</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #6b8cae;
+            --accent-color: #ff7e5f;
+            --light-bg: #f8f9fa;
+            --dark-text: #2c3e50;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-bg);
+            color: var(--dark-text);
+            line-height: 1.6;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            padding: 1.5rem;
+            border-bottom: none;
+            color: white;
+        }
+        
+        .recommendation-card {
+            border-left: 4px solid var(--accent-color);
+            margin-bottom: 1.5rem;
+            transition: transform 0.3s;
+        }
+        
+        .recommendation-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .risk-badge {
+            font-size: 1rem;
+            padding: 0.5rem 1rem;
+        }
+        
+        .low-risk {
+            background-color: #4CAF50;
+        }
+        
+        .moderate-risk {
+            background-color: #FFC107;
+            color: #212529;
+        }
+        
+        .high-risk {
+            background-color: #F44336;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        
+        .feature-icon {
+            margin-right: 1rem;
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            min-width: 2rem;
+            text-align: center;
+        }
+        
+        .feature-text {
+            flex: 1;
+        }
+        
+        .factor-item {
+            background-color: rgba(74, 111, 165, 0.05);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .factor-title {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .factor-impact {
+            font-size: 0.8rem;
+            color: var(--secondary-color);
+        }
+        
+        /* PDF-specific styles */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #pdfContent, #pdfContent * {
+                visibility: visible;
+            }
+            #pdfContent {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+        }
+        
+        #pdfContent {
+            padding: 15px;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="card shadow-lg">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h3 class="text-center text-white mb-0">PCOS Management Recommendations</h3>
+                            <span id="riskBadge" class="badge risk-badge">Risk Level</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- PDF Content Wrapper -->
+                        <div id="pdfContent">
+                            <div class="alert alert-info">
+                                <h5><i class="fas fa-info-circle me-2"></i>Personalized Recommendations</h5>
+                                <p class="mb-0">These suggestions are tailored based on your assessment results. Always consult with your healthcare provider before making significant changes.</p>
+                            </div>
+                            
+                            <div id="assessmentSummary" class="mb-4">
+                                <h4 class="mb-3"><i class="fas fa-clipboard-check me-2"></i>Your Assessment Summary</h4>
+                                <div id="keyFactors"></div>
+                            </div>
+                            
+                            <div id="lifestyleSection">
+                                <h4 class="mt-4 mb-3"><i class="fas fa-heartbeat me-2"></i>Lifestyle Recommendations</h4>
+                                
+                                <div class="card recommendation-card">
+                                    <div class="card-body">
+                                        <h5><i class="fas fa-utensils text-primary me-2"></i>Dietary Changes</h5>
+                                        <div id="dietRecommendations"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="card recommendation-card">
+                                    <div class="card-body">
+                                        <h5><i class="fas fa-running text-primary me-2"></i>Exercise Plan</h5>
+                                        <div id="exerciseRecommendations"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="card recommendation-card">
+                                    <div class="card-body">
+                                        <h5><i class="fas fa-heart text-primary me-2"></i>Overall Lifestyle</h5>
+                                        <div id="lifestyleRecommendations"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="medicalSection">
+                                <h4 class="mt-5 mb-3"><i class="fas fa-user-md me-2"></i>Medical Recommendations</h4>
+                                
+                                <div class="card recommendation-card">
+                                    <div class="card-body">
+                                        <h5><i class="fas fa-prescription-bottle-alt text-primary me-2"></i>Potential Treatments</h5>
+                                        <div id="treatmentRecommendations"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="card recommendation-card">
+                                    <div class="card-body">
+                                        <h5><i class="fas fa-microscope text-primary me-2"></i>Diagnostic Tests</h5>
+                                        <div id="testRecommendations"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center mt-4">
+                            <a href="/test" class="btn btn-primary me-2">
+                                <i class="fas fa-redo me-1"></i> Retake Assessment
+                            </a>
+                            <a href="/user-history" class="btn btn-outline-primary me-2">
+                                <i class="fas fa-history me-1"></i> View History
+                            </a>
+                            <button id="downloadPdf" class="btn btn-success">
+                                <i class="fas fa-file-pdf me-1"></i> Save as PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get assessment data from localStorage
+            const loginHistory = JSON.parse(localStorage.getItem('loginHistory') || '[]');
+            const currentUser = localStorage.getItem('currentUser');
+            
+            // Find the latest assessment for the current user
+            let latestAssessment = null;
+            for (let i = loginHistory.length - 1; i >= 0; i--) {
+                if (loginHistory[i].username === currentUser && loginHistory[i].type === 'assessment') {
+                    latestAssessment = loginHistory[i];
+                    break;
+                }
+            }
+            
+            if (!latestAssessment) {
+                // If no assessment found, redirect to assessment page
+                window.location.href = 'pcos-assessment.html';
+                return;
+            }
+            
+            const riskLevel = latestAssessment.riskLevel || 'moderate';
+            const riskPercentage = latestAssessment.riskPercentage || 50;
+            const formData = latestAssessment.formData || {};
+            
+            // Set risk badge
+            const riskBadge = document.getElementById('riskBadge');
+            riskBadge.textContent = riskLevel.charAt(0).toUpperCase() + riskLevel.slice(1) + ' Risk';
+            riskBadge.classList.add(riskLevel === 'high' ? 'high-risk' : 
+                                  riskLevel === 'moderate' ? 'moderate-risk' : 'low-risk');
+            
+            // Display key factors from assessment
+            displayKeyFactors(formData);
+            
+            // Generate recommendations based on risk level and specific factors
+            generateRecommendations(riskLevel, formData);
+            
+            // Generate comprehensive lifestyle recommendations
+            generateComprehensiveRecommendations(riskLevel, formData);
+            
+            // PDF Generation Functionality - Updated version
+            document.getElementById('downloadPdf').addEventListener('click', function() {
+                const button = this;
+                const originalText = button.innerHTML;
+                
+                button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Generating PDF...';
+                button.disabled = true;
+                
+                const element = document.getElementById('pdfContent');
+                
+                const opt = {
+                    margin: [10, 10, 10, 10],
+                    filename: 'PCOS_Recommendations_' + new Date().toISOString().slice(0, 10) + '.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { 
+                        scale: 2,
+                        scrollY: 0,
+                        logging: false,
+                        useCORS: true
+                    },
+                    jsPDF: { 
+                        unit: 'mm', 
+                        format: 'a4', 
+                        orientation: 'portrait',
+                        compress: true
+                    },
+                    pagebreak: { 
+                        mode: ['avoid-all', 'css', 'legacy']
+                    }
+                };
+                
+                html2pdf()
+                    .set(opt)
+                    .from(element)
+                    .toPdf()
+                    .get('pdf')
+                    .then(function(pdf) {
+                        const totalPages = pdf.internal.getNumberOfPages();
+                        for (let i = 1; i <= totalPages; i++) {
+                            pdf.setPage(i);
+                            pdf.setFontSize(10);
+                            pdf.text('Page ' + i + ' of ' + totalPages, 
+                                    pdf.internal.pageSize.getWidth() - 30, 
+                                    pdf.internal.pageSize.getHeight() - 10);
+                        }
+                    })
+                    .save()
+                    .then(() => {
+                        button.innerHTML = originalText;
+                        button.disabled = false;
+                    })
+                    .catch(err => {
+                        console.error('PDF generation error:', err);
+                        button.innerHTML = originalText;
+                        button.disabled = false;
+                        alert('Error generating PDF. Please try again.');
+                    });
+            });
+        });
+        
+        function displayKeyFactors(formData) {
+            // Default values if not provided
+            formData.bmi = formData.bmi || 'Not provided';
+            formData.menstrual = formData.menstrual || 'No';
+            formData.hirsutism = formData.hirsutism || 'No';
+            formData.familyHistory = formData.familyHistory || 'No';
+            formData.amh = formData.amh || 0;
+            formData.fastingGlucose = formData.fastingGlucose || 0;
+            formData.fastingInsulin = formData.fastingInsulin || 0;
+            
+            const factors = [
+                { 
+                    name: 'BMI', 
+                    value: formData.bmi, 
+                    impact: formData.bmi === 'Overweight' || formData.bmi === 'Obese' ? 'High' : 
+                           formData.bmi === 'Normal' ? 'Low' : 'Medium',
+                    icon: 'weight'
+                },
+                { 
+                    name: 'Menstrual Regularity', 
+                    value: formData.menstrual === 'No' ? 'Irregular' : 'Regular', 
+                    impact: formData.menstrual === 'No' ? 'High' : 'Low',
+                    icon: 'calendar-alt'
+                },
+                { 
+                    name: 'Hirsutism', 
+                    value: formData.hirsutism === 'Yes' ? 'Present' : 'Not present', 
+                    impact: formData.hirsutism === 'Yes' ? 'High' : 'Low',
+                    icon: 'user'
+                },
+                { 
+                    name: 'Family History', 
+                    value: formData.familyHistory === 'Yes' ? 'Present' : 'Not present', 
+                    impact: formData.familyHistory === 'Yes' ? 'Medium' : 'Low',
+                    icon: 'dna'
+                },
+                { 
+                    name: 'AMH Level', 
+                    value: formData.amh ? formData.amh + ' ng/mL' : 'Not provided', 
+                    impact: formData.amh > 3.5 ? 'High' : (formData.amh > 0 ? 'Medium' : 'Low'),
+                    icon: 'flask'
+                }
+            ];
+            
+            let factorsHTML = '<div class="row">';
+            
+            factors.forEach(factor => {
+                factorsHTML += `
+                    <div class="col-md-6">
+                        <div class="factor-item">
+                            <div class="factor-title">
+                                <i class="fas fa-${factor.icon} me-2"></i>${factor.name}
+                            </div>
+                            <div class="feature-value mb-1">${factor.value}</div>
+                            <div class="factor-impact">Impact: ${factor.impact}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            factorsHTML += '</div>';
+            document.getElementById('keyFactors').innerHTML = factorsHTML;
+        }
+        
+        function generateRecommendations(riskLevel, formData) {
+            // Dietary recommendations based on specific factors
+            let dietRecs = [
+                "Focus on low glycemic index (GI) foods like whole grains, legumes, and non-starchy vegetables",
+                "Increase intake of anti-inflammatory foods (berries, fatty fish, leafy greens)",
+                "Reduce processed foods and added sugars"
+            ];
+            
+            // Add specific recommendations based on BMI
+            if (formData.bmi === 'Overweight' || formData.bmi === 'Obese') {
+                dietRecs.push("Consider a moderate calorie deficit (300-500 kcal/day) for gradual weight loss");
+                dietRecs.push("Increase protein intake to 25-30% of total calories to support satiety");
+            }
+            
+            // Add specific recommendations based on insulin/glucose levels
+            if (formData.fastingGlucose > 100 || formData.fastingInsulin > 19) {
+                dietRecs.push("Space carbohydrate intake throughout the day and pair with protein/fat");
+                dietRecs.push("Consider reducing total carbohydrate intake to 40-45% of calories");
+            }
+            
+            if (riskLevel === 'high') {
+                dietRecs.push("Consider consulting a nutritionist for a personalized meal plan");
+                dietRecs.push("Monitor carbohydrate intake more carefully to manage insulin resistance");
+            }
+            
+            document.getElementById('dietRecommendations').innerHTML = '<ul>' + 
+                dietRecs.map(rec => `<li>${rec}</li>`).join('') + '</ul>';
+            
+            // Exercise recommendations
+            let exerciseRecs = [
+                "Aim for at least 150 minutes of moderate exercise per week",
+                "Include both aerobic (walking, swimming) and resistance training",
+                "Try to reduce sedentary time by taking short movement breaks"
+            ];
+            
+            // Adjust based on BMI
+            if (formData.bmi === 'Overweight' || formData.bmi === 'Obese') {
+                exerciseRecs.push("Start with low-impact activities and gradually increase intensity");
+                exerciseRecs.push("Include 2-3 sessions of resistance training per week to preserve muscle mass");
+            }
+            
+            if (riskLevel !== 'low') {
+                exerciseRecs.push("High-intensity interval training (HIIT) may be particularly beneficial for insulin sensitivity");
+            }
+            
+            document.getElementById('exerciseRecommendations').innerHTML = '<ul>' + 
+                exerciseRecs.map(rec => `<li>${rec}</li>`).join('') + '</ul>';
+            
+            // Treatment recommendations
+            const treatmentRecs = {
+                low: [
+                    "Regular monitoring of symptoms may be sufficient",
+                    "Consider over-the-counter options for symptom management (e.g., acne treatments)"
+                ],
+                moderate: [
+                    "Discuss potential medications with your doctor (e.g., metformin for insulin resistance)",
+                    "Birth control pills may help regulate menstrual cycles if needed",
+                    "Anti-androgen medications may help with hirsutism or acne"
+                ],
+                high: [
+                    "Strongly recommend consultation with an endocrinologist or gynecologist",
+                    "Medications like metformin or inositols may be recommended",
+                    "Fertility treatments may be needed if trying to conceive",
+                    "Regular monitoring for metabolic complications (diabetes, cholesterol)"
+                ]
+            };
+            
+            // Add specific treatment suggestions based on symptoms
+            if (formData.hirsutism === 'Yes' && riskLevel !== 'low') {
+                treatmentRecs[riskLevel].push("Consider anti-androgen therapy for hirsutism if symptoms are bothersome");
+            }
+            
+            if (formData.menstrual === 'No' && riskLevel !== 'low') {
+                treatmentRecs[riskLevel].push("Hormonal contraceptives may help regulate menstrual cycles");
+            }
+            
+            document.getElementById('treatmentRecommendations').innerHTML = '<ul>' + 
+                treatmentRecs[riskLevel].map(rec => `<li>${rec}</li>`).join('') + '</ul>';
+            
+            // Test recommendations
+            let testRecs = {
+                low: [
+                    "Annual check of BMI and blood pressure",
+                    "Consider basic hormone panel if symptoms persist"
+                ],
+                moderate: [
+                    "Fasting glucose and insulin levels",
+                    "Lipid profile",
+                    "Complete hormone panel (LH, FSH, testosterone, AMH)",
+                    "Thyroid function tests"
+                ],
+                high: [
+                    "All tests from moderate risk plus:",
+                    "Oral glucose tolerance test",
+                    "Pelvic ultrasound",
+                    "Regular (every 6-12 months) metabolic monitoring",
+                    "Cardiovascular risk assessment"
+                ]
+            };
+            
+            // Add specific test suggestions based on symptoms
+            if (formData.hirsutism === 'Yes') {
+                testRecs[riskLevel].push("Free testosterone and DHEA-S levels to assess androgen excess");
+            }
+            
+            if (formData.fastingGlucose > 100 || formData.fastingInsulin > 19) {
+                testRecs[riskLevel].push("HbA1c to assess long-term glucose control");
+            }
+            
+            document.getElementById('testRecommendations').innerHTML = '<ul>' + 
+                testRecs[riskLevel].map(rec => `<li>${rec}</li>`).join('') + '</ul>';
+        }
+        
+        function generateComprehensiveRecommendations(riskLevel, formData) {
+            // Common recommendations for all risk levels
+            let recommendations = `
+                <div class="feature-item mb-2">
+                    <div class="feature-icon">
+                        <i class="fas fa-utensils"></i>
+                    </div>
+                    <div class="feature-text">
+                        <strong>Balanced Diet</strong>: Focus on whole foods, lean proteins, complex carbohydrates, and healthy fats.
+                    </div>
+                </div>
+                <div class="feature-item mb-2">
+                    <div class="feature-icon">
+                        <i class="fas fa-water"></i>
+                    </div>
+                    <div class="feature-text">
+                        <strong>Hydration</strong>: Drink at least 2 liters of water daily to support metabolism and hormone balance.
+                    </div>
+                </div>
+                <div class="feature-item mb-2">
+                    <div class="feature-icon">
+                        <i class="fas fa-bed"></i>
+                    </div>
+                    <div class="feature-text">
+                        <strong>Sleep Hygiene</strong>: Maintain regular sleep schedule (7-9 hours/night) to support hormonal balance.
+                    </div>
+                </div>
+                <div class="feature-item mb-2">
+                    <div class="feature-icon">
+                        <i class="fas fa-spa"></i>
+                    </div>
+                    <div class="feature-text">
+                        <strong>Stress Management</strong>: Practice mindfulness, yoga, or meditation to reduce cortisol levels.
+                    </div>
+                </div>
+            `;
+
+            // Risk-level specific recommendations
+            if (riskLevel === 'moderate') {
+                recommendations += `
+                    <div class="feature-item mb-2">
+                        <div class="feature-icon">
+                            <i class="fas fa-seedling"></i>
+                        </div>
+                        <div class="feature-text">
+                            <strong>Anti-inflammatory Foods</strong>: Increase intake of omega-3s (fatty fish, flaxseeds), turmeric, and leafy greens.
+                        </div>
+                    </div>
+                    <div class="feature-item mb-2">
+                        <div class="feature-icon">
+                            <i class="fas fa-bread-slice"></i>
+                        </div>
+                        <div class="feature-text">
+                            <strong>Glycemic Control</strong>: Choose low-glycemic index foods and pair carbs with protein/fat to manage insulin.
+                        </div>
+                    </div>
+                `;
+                
+                if (formData.bmi === 'Overweight' || formData.bmi === 'Obese') {
+                    recommendations += `
+                        <div class="feature-item mb-2">
+                            <div class="feature-icon">
+                                <i class="fas fa-weight"></i>
+                            </div>
+                            <div class="feature-text">
+                                <strong>Weight Management</strong>: Even 5-10% weight loss can significantly improve symptoms.
+                            </div>
+                        </div>
+                    `;
+                }
+            } else if (riskLevel === 'high') {
+                recommendations += `
+                    <div class="feature-item mb-2">
+                        <div class="feature-icon">
+                            <i class="fas fa-times-circle"></i>
+                        </div>
+                        <div class="feature-text">
+                            <strong>Avoid Triggers</strong>: Limit processed foods, sugary drinks, trans fats, and excessive caffeine.
+                        </div>
+                    </div>
+                    <div class="feature-item mb-2">
+                        <div class="feature-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="feature-text">
+                            <strong>Meal Timing</strong>: Try intermittent fasting (12-14 hour overnight fast) to improve insulin sensitivity.
+                        </div>
+                    </div>
+                    <div class="feature-item mb-2">
+                        <div class="feature-icon">
+                            <i class="fas fa-pills"></i>
+                        </div>
+                        <div class="feature-text">
+                            <strong>Supplements</strong>: Consider inositol, vitamin D, magnesium, and chromium after consulting your doctor.
+                        </div>
+                    </div>
+                `;
+                
+                if (formData.fastingGlucose > 100 || formData.fastingInsulin > 19) {
+                    recommendations += `
+                        <div class="feature-item mb-2">
+                            <div class="feature-icon">
+                                <i class="fas fa-heartbeat"></i>
+                            </div>
+                            <div class="feature-text">
+                                <strong>Blood Sugar Monitoring</strong>: Consider regular glucose monitoring to track your response to dietary changes.
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            document.getElementById('lifestyleRecommendations').innerHTML = recommendations;
+        }
+    </script>
+</body>
+</html>
