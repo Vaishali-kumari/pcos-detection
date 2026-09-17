@@ -6,6 +6,7 @@ app = Flask(__name__)
 app.secret_key = 'pcos_secret_key_2024'
 DATABASE = 'database.db'
 
+# Run DB init on startup (needed for gunicorn)
 def init_db():
     conn = sqlite3.connect(DATABASE)
     c = conn.cursor()
@@ -34,6 +35,9 @@ def get_db():
     conn = sqlite3.connect(DATABASE)
     conn.row_factory = sqlite3.Row
     return conn
+
+# Initialize DB on every startup
+init_db()
 
 def calculate_risk(form_data):
     risk = 20
@@ -207,4 +211,6 @@ def logout():
 
 if __name__ == '__main__':
     init_db()
-    app.run(debug=True)
+    import os
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
